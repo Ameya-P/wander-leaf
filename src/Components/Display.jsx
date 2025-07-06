@@ -3,8 +3,8 @@ import React from 'react'
 const Display = ({features, findPlant, banItem, unBanItem}) => {
   return (
     <div className="display">
-        <h1>Wanderleaf</h1>
-        <h3>Get lost in the garden of possibilities and let curiosity take root!</h3>
+        <h1>BlankSlate</h1>
+        <h3>Step outside your musical bubble!</h3>
 
         <h2>{features.common_name}</h2>
         <h3>{features.scientific_name}</h3>
