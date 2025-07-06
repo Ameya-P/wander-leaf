@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Display = ({features, onSubmit, banItem, unBanItem}) => {
+const Display = ({features, findPlant, banItem, unBanItem}) => {
   return (
     <div className="display">
         <h1>Wanderleaf</h1>
@@ -20,7 +20,7 @@ const Display = ({features, onSubmit, banItem, unBanItem}) => {
             <img src={features.default_image} className="my-plant-image"/>
         </div>
 
-        <button className="discover-button">☘️ Discover!</button>
+        <button className="discover-button" onClick={findPlant}>☘️ Discover!</button>
     </div>
   )
 }

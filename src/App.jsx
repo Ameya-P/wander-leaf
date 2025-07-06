@@ -4,6 +4,7 @@ import axios from 'axios';
 import Display from './Components/Display';
 import BanList from './Components/BanList';
 import SeenList from './Components/SeenList';
+
 const ACCESS_KEY = import.meta.env.VITE_APP_ACCESS_KEY;
 
 function App() {
@@ -19,12 +20,12 @@ function App() {
   });
 
   const [featureOptions, setFeatureOptions] = useState({
-    edible: ["","1"],
-    cycle: ["perennial", "annual", "biennial", "biannual"],
-    watering: ["frequent", "average", "minimum", "none"],
-    sunlight: ["full_shade", "part_shade", "sun-part_shade", "full_sun"],
-    indoor: ["","1"],
-  })
+    edible: ["0", "1"], // Fixed: removed empty strings
+    cycle: ["perennial", "annual"],
+    watering: ["frequent", "average", "minimum"],
+    sunlight: ["full_shade", "part_shade", "full_sun"],
+    indoor: ["0", "1"], // Fixed: removed empty strings
+  });
 
   const [banList, setBanList] = useState({
     edible: [],
@@ -32,36 +33,123 @@ function App() {
     watering: [],
     sunlight: [],
     indoor: [],
-  })
+  });
 
   const [seenList, setSeenList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // The code that we want to run
-    // Optional return function
-  }, []) // The dependency array
-
-  const submitForm = () => {
+  const submitForm = (e) => {
     e.preventDefault();
     makeQuery();
   }
 
   const makeQuery = () => {
-    let url_starter = "https://";
-    let apiWebsite = "perenual.com";
+    // Randomly select features
+    const urlValues = {};
 
-    let query = `https://perenual.com/api/v2/species-list?key=${ACCESS_KEY}`;
+    for (const [key, valsList] of Object.entries(featureOptions)) {
+      urlValues[key] = valsList[Math.floor(Math.random() * valsList.length)];
+    }
+
+    const query = buildQueryString(urlValues, 1);
+    callAPI(query, urlValues);
   }
 
-  const callAPI = async (query) => {
-    const response = await axios.get(query);
+  const buildQueryString = (urlValues, page) => {
+    const params = new URLSearchParams({
+      key: ACCESS_KEY,
+      page: page.toString(),
+      ...urlValues
+    });
+    return `https://perenual.com/api/v2/species-list?${params.toString()}`;
+  }
+
+  const callAPI = async (query, urlValues) => {
+    if (!ACCESS_KEY) {
+      alert("API key is missing! Please check your environment variables.");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // First API call to get pagination info
+      const response = await axios.get(query);
+      
+      if (!response.data || !response.data.data || response.data.data.length === 0) {
+        console.log(query);
+        throw new Error("No plants found with the selected criteria");
+      }
+
+      // Pick a random page
+      const randPage = Math.floor(Math.random() * response.data.last_page) + 1;
+      
+      // Second API call to get random page
+      const newQuery = buildQueryString(urlValues, randPage);
+      const newResponse = await axios.get(newQuery);
+
+      if (!newResponse.data || !newResponse.data.data || newResponse.data.data.length === 0) {
+        console.log(newQuery);
+        throw new Error("No plants found on the selected page");
+      }
+
+      // Pick a random plant from that page
+      const plantsArray = newResponse.data.data;
+      const myPlant = plantsArray[Math.floor(Math.random() * plantsArray.length)];
+
+      await getPlantDetails(myPlant);
+
+    } catch (error) {
+      console.log(query);
+      console.error("API Error:", error);
+      alert(`We ran into a problem: ${error.message || "Unable to fetch plant data"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const getPlantDetails = async (plant) => {
+    try {
+      const specificPlantQuery = `https://perenual.com/api/v2/species/details/${plant.id}?key=${ACCESS_KEY}`;
+      const specificPlantResponse = await axios.get(specificPlantQuery);
+
+      if (!specificPlantResponse.data) {
+        console.log(specificPlantQuery);
+        throw new Error("Unable to fetch plant details");
+      }
+
+      const plantData = specificPlantResponse.data;
+      
+      // Process and update features
+      const newFeatures = {
+        common_name: plantData.common_name || "Unknown Plant",
+        scientific_name: Array.isArray(plantData.scientific_name) 
+          ? plantData.scientific_name.join(", ") 
+          : plantData.scientific_name || "Unknown Species",
+        default_image: plantData.default_image?.regular_url || "/placeholder.avif",
+        edible: plantData.edible_fruit || plantData.edible_leaf ? "Yes" : "No",
+        cycle: plantData.cycle || "Unknown",
+        watering: plantData.watering || "Unknown",
+        sunlight: Array.isArray(plantData.sunlight) 
+          ? plantData.sunlight.join(", ") 
+          : plantData.sunlight || "Unknown",
+        indoor: plantData.indoor ? "Yes" : "No",
+      };
+
+      setFeatures(newFeatures);
+
+    } catch (error) {
+      console.log(plant.id)
+      console.error("Plant Details Error:", error);
+      alert("Unable to fetch detailed plant information");
+    }
   }
 
   return (
     <div className="my-app">
-      <SeenList/>
-      <Display features={features}/>
-      <BanList/>
+      <SeenList />
+      <Display features={features} findPlant={submitForm}/>
+      <BanList />
     </div>
   )
 }
