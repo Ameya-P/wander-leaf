@@ -95,7 +95,13 @@ function App() {
 
       // Pick a random plant from that page
       const plantsArray = newResponse.data.data;
-      const myPlant = plantsArray[Math.floor(Math.random() * plantsArray.length)];
+      const validPlants = plantsArray.filter(plant => plant.id <= 3000);
+      if (validPlants.length === 0) {
+        console.log("No valid plants found");
+        return; // Don't call getPlantDetails
+      }
+
+      let myPlant = validPlants[Math.floor(Math.random() * validPlants.length)];
 
       await getPlantDetails(myPlant);
 
