@@ -1,26 +1,50 @@
 import React from 'react'
 
-const Display = ({features, findPlant, banItem, unBanItem}) => {
+const Display = ({ features, findPlant, banItem, banList}) => {
   return (
     <div className="display">
-        <h1>BlankSlate</h1>
-        <h3>Step outside your musical bubble!</h3>
+      <h1>Wanderleaf</h1>
+      <h3 className='tagline'>Get lost in the garden of possibilities and let curiosity take root!</h3>
 
-        <h2>{features.common_name}</h2>
-        <h3>{features.scientific_name}</h3>
-        <div className="my-features">
-            {features &&
-                Object.entries(features)
-                .filter(([key]) => !['common_name', 'scientific_name', 'default_image'].includes(key))
-                .map(([category, value], index) => (
-                    <button>{category}: {value}</button>
-            ))}
-        </div>
-        <div className="image-wrapper">
-            <img src={features.default_image} className="my-plant-image"/>
-        </div>
+      <br></br>
 
-        <button className="discover-button" onClick={findPlant}>☘️ Discover!</button>
+      <h2>{features.common_name}</h2>
+      <h3>{features.scientific_name}</h3>
+      <div className="my-features">
+        {features &&
+          Object.entries(features)
+            .filter(([key]) => !['common_name', 'scientific_name', 'default_image'].includes(key))
+            .flatMap(([category, value], index) => {
+              const values = Array.isArray(value) ? value : [value];
+
+              const getButtonClass = (cat, val) => {
+                let baseClass = ` ${cat}-button`;
+
+                // Add state-based classes
+                if (banList[cat]?.includes(val)) baseClass += ' banned';
+
+                return baseClass;
+              };
+
+              return values.map((item, itemIndex) => (
+                <button
+                  key={`${category}-${itemIndex}`}
+                  className={getButtonClass(category, item)}
+                  data-category={category}
+                  data-value={item}
+                  onClick={banItem}
+                >
+                  {category}: {item}
+                </button>
+              ));
+            })
+        }
+      </div>
+      <div className="image-wrapper">
+        <img src={features.default_image} className="my-plant-image" />
+      </div>
+
+      <button className="discover-button" onClick={findPlant}>☘️ Discover!</button>
     </div>
   )
 }

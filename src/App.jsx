@@ -10,8 +10,8 @@ const ACCESS_KEY = import.meta.env.VITE_APP_ACCESS_KEY;
 function App() {
   const [features, setFeatures] = useState({
     common_name: "Press Discover...!",
-    scientific_name: "...to Meet a New Plant",
-    default_image: "/placeholder.avif",
+    scientific_name: "...to meet a new plant",
+    default_image: "/placeholder.png",
     edible: "?",
     cycle: "?",
     watering: "?",
@@ -136,12 +136,11 @@ function App() {
         edible: plantData.edible_fruit || plantData.edible_leaf ? "Yes" : "No",
         cycle: plantData.cycle || "Unknown",
         watering: plantData.watering || "Unknown",
-        sunlight: Array.isArray(plantData.sunlight) 
-          ? plantData.sunlight.join(", ") 
-          : plantData.sunlight || "Unknown",
+        sunlight: plantData.sunlight || "Unknown",
         indoor: plantData.indoor ? "Yes" : "No",
       };
 
+      addSeenPlant();
       setFeatures(newFeatures);
 
     } catch (error) {
@@ -151,11 +150,89 @@ function App() {
     }
   }
 
+  const addSeenPlant = () => {
+    setSeenList([...seenList, (features.common_name, features.default_image)]);
+  }
+
+  const banItem = (event) => {
+    const category = event.target.dataset.category;
+    const value = event.target.dataset.value;
+
+    // Prevent banning unknown values
+    if (value === "Unknown" || value === "?") {
+      alert("You cannot ban an unknown value!");
+      return;
+    }
+
+    // Convert display value to API value
+    const processedValue = processValue(category, value);
+
+    // Check if already banned to prevent duplicates
+    if (banList[category].includes(processedValue)) {
+      alert(`"${value}" is already banned!`);
+      return;
+    }
+
+    // Remove from available options and add to ban list
+    const updatedOptions = featureOptions[category].filter(option => option !== processedValue);
+    const updatedBanList = [...banList[category], processedValue];
+
+    setFeatureOptions({
+      ...featureOptions,
+      [category]: updatedOptions
+    });
+
+    setBanList({
+      ...banList,
+      [category]: updatedBanList
+    });
+  };
+
+  const processValue = (category, value) => {
+    // Categories that use string values as-is
+    const stringCategories = ["cycle", "watering", "sunlight"];
+
+    if (stringCategories.includes(category)) {
+      return value;
+    }
+
+    // For edible and indoor categories, convert Yes/No to 1/0
+    return value === "Yes" ? "1" : "0";
+  };
+
+  const unBanItem = () => {
+    const category = event.target.dataset.category;
+    const value = event.target.dataset.value;
+
+    // Convert display value to API value
+    const processedValue = processValue(category, value);
+
+    // Check if already banned to prevent duplicates
+    if (featureOptions[category].includes(processedValue)) {
+      alert(`"${value}" is already allowed!`);
+      return;
+    }
+
+    // Remove from available options and add to ban list
+    const updatedOptions = [...featureOptions[category], processedValue];
+    const updatedBanList = banList[category].filter(option => option !== processedValue);
+
+    setFeatureOptions({
+      ...featureOptions,
+      [category]: updatedOptions
+    });
+
+    setBanList({
+      ...banList,
+      [category]: updatedBanList
+    });
+  }
+
   return (
     <div className="my-app">
-      <SeenList />
-      <Display features={features} findPlant={submitForm}/>
-      <BanList />
+      <SeenList seenList={seenList}/>
+      <Display features={features} findPlant={submitForm} banItem={banItem} banList={banList}/>
+      <BanList banList={banList} unBanItem={unBanItem} featureOptions={featureOptions}/>
     </div>
   )
 }

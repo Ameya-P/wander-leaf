@@ -1,11 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+Great+Primer:ital@0;1&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+
+    font-family: "IM Fell Great Primer";
+    color: #f5f0e9;
+    text-align: center;
 }
 
 html, body {
     height: 100%;
+}
+
+h1 {
+    font-size: 8em;
+}
+
+h2 {
+    font-size: 3.5em;
+}
+
+h3 {
+    font-size: 1.6em;
+    font-style: italic;
 }
 
 /* Target the React root div */
@@ -18,12 +37,30 @@ html, body {
 .my-app {
     display: flex;
     flex: 1;
-    background: linear-gradient(#e8ddca, #DCD1BE);
+    background: linear-gradient(#f5f0e9, #cac8c3);
+
+    /* Add paper texture overlay */
+    background-image: 
+        url("/ep_naturalwhite.webp"),
+        linear-gradient(#f5f0e9, #cac8c3);
+    background-size: 
+        400px 400px,  /* Size of texture tile */
+        100%;         /* Size of gradient */
+    background-repeat: 
+        repeat,       /* Tile the texture */
+        no-repeat;    /* Don't repeat gradient */
+    background-blend-mode: multiply; /* Blend texture with gradient */
 
     padding: 10px;
 }
 
 .seen-list, .ban-list, .display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    padding: 40px;
     margin: 20px;
     border-radius: 50px;
 
@@ -32,6 +69,8 @@ html, body {
 
 .seen-list {
     flex: 1;
+    overflow-y: auto;
+    max-height: 1130px;
 }
 
 .ban-list {
@@ -40,14 +79,60 @@ html, body {
 
 .display {
     flex: 3;
-    display: flex;
-    flex-direction: column;
 }
 
 .my-plant-image {
     flex: 1;
-    max-width: 100%;
+    max-width: 400px; /* Change it to 100% if I want it to scale */
     height: auto;
     object-fit: contain;
     align-self: center;
+
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+img {
+    border-radius: 50px;
+    box-shadow: 0 5px 10px rgba(142, 140, 140, 0.05), 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+button {
+    border: none;
+    border-radius: 50px;
+    padding: 30px;
+
+    color: #4f6962;
+    font-size: 1.3em;
+    background-color: #f5f0e9;
+    transition: background-color 0.5s ease;
+}
+
+button:hover {
+    background-color: #e1dbd3;
+    transition: background-color 0.5s ease;
+}
+
+button:focus {
+    background-color: #d5cec4;
+    transition: background-color 0.5s ease;
+}
+
+.my-features {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.test {
+    width: 200px;
+    height: 200px;
+    flex: 0 0 auto;
+    background-color: red;
+}
+
+.banned, .unbanned {
+    display: none;
 }
