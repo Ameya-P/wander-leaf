@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Display = ({ features, findPlant, banItem, banList}) => {
+const Display = ({ features, findPlant, banItem, banList, unProcessValue}) => {
   return (
     <div className="display">
       <h1>Wanderleaf</h1>
@@ -34,15 +34,15 @@ const Display = ({ features, findPlant, banItem, banList}) => {
                   data-value={item}
                   onClick={banItem}
                 >
-                  {category}: {item}
+                  {category}: {unProcessValue(category, item)}
                 </button>
               ));
             })
         }
       </div>
-      <div className="image-wrapper">
-        <img src={features.default_image} className="my-plant-image" />
-      </div>
+
+      <img src={features.default_image} className="my-plant-image" />
+
 
       <button className="discover-button" onClick={findPlant}>☘️ Discover!</button>
     </div>

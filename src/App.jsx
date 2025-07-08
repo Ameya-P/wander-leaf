@@ -9,8 +9,8 @@ const ACCESS_KEY = import.meta.env.VITE_APP_ACCESS_KEY;
 
 function App() {
   const [features, setFeatures] = useState({
-    common_name: "Press Discover...!",
-    scientific_name: "...to meet a new plant",
+    common_name: "Press Discover...",
+    scientific_name: "...to meet a new plant!",
     default_image: "/placeholder.png",
     edible: "?",
     cycle: "?",
@@ -20,11 +20,11 @@ function App() {
   });
 
   const [featureOptions, setFeatureOptions] = useState({
-    edible: ["0", "1"], // Fixed: removed empty strings
+    edible: ["No", "Yes"], // Fixed: removed empty strings
     cycle: ["perennial", "annual"],
     watering: ["frequent", "average", "minimum"],
     sunlight: ["full_shade", "part_shade", "full_sun"],
-    indoor: ["0", "1"], // Fixed: removed empty strings
+    indoor: ["No", "Yes"], // Fixed: removed empty strings
   });
 
   const [banList, setBanList] = useState({
@@ -48,7 +48,8 @@ function App() {
     const urlValues = {};
 
     for (const [key, valsList] of Object.entries(featureOptions)) {
-      urlValues[key] = valsList[Math.floor(Math.random() * valsList.length)];
+      let my_value = valsList[Math.floor(Math.random() * valsList.length)];
+      urlValues[key] = my_value === "Yes" ? "1" : my_value === "No" ? "0" : my_value;
     }
 
     const query = buildQueryString(urlValues, 1);
@@ -129,14 +130,34 @@ function App() {
       // Process and update features
       const newFeatures = {
         common_name: plantData.common_name || "Unknown Plant",
+
         scientific_name: Array.isArray(plantData.scientific_name) 
           ? plantData.scientific_name.join(", ") 
           : plantData.scientific_name || "Unknown Species",
-        default_image: plantData.default_image?.regular_url || "/placeholder.avif",
+
+        default_image: plantData.default_image?.regular_url || "/placeholder.png",
+
         edible: plantData.edible_fruit || plantData.edible_leaf ? "Yes" : "No",
-        cycle: plantData.cycle || "Unknown",
-        watering: plantData.watering || "Unknown",
-        sunlight: plantData.sunlight || "Unknown",
+
+        cycle: !plantData.cycle ? "Unknown"
+          : plantData.cycle.toLowerCase().includes("perennial") ? "perennial"
+            : plantData.cycle.toLowerCase().includes("annual") ? "annual"
+              : plantData.cycle,
+
+        watering: !plantData.watering ? "Unknown"
+          : plantData.watering.toLowerCase().includes("frequent") ? "frequent"
+            : plantData.watering.toLowerCase().includes("average") ? "average"
+              : plantData.watering.toLowerCase().includes("minimum") ? "minimum"
+                : plantData.watering,
+
+        sunlight: !plantData.sunlight ? ["Unknown"]
+          : plantData.sunlight.map(item =>
+            item.toLowerCase().includes("full shade") ? "full_shade"
+              : item.toLowerCase().includes("part shade") ? "part_shade"
+                : item.toLowerCase().includes("full sun") ? "full_sun"
+                  : item
+          ),
+
         indoor: plantData.indoor ? "Yes" : "No",
       };
 
@@ -151,7 +172,12 @@ function App() {
   }
 
   const addSeenPlant = () => {
-    setSeenList([...seenList, (features.common_name, features.default_image)]);
+    // Don't add it to scene if the previous item was the default starter item
+    if (features.common_name === "Press Discover...") {
+      return;
+    }
+
+    setSeenList([...seenList, [features.common_name, features.default_image]]);
   }
 
   const banItem = (event) => {
@@ -164,18 +190,15 @@ function App() {
       return;
     }
 
-    // Convert display value to API value
-    const processedValue = processValue(category, value);
-
     // Check if already banned to prevent duplicates
-    if (banList[category].includes(processedValue)) {
+    if (banList[category].includes(value)) {
       alert(`"${value}" is already banned!`);
       return;
     }
 
     // Remove from available options and add to ban list
-    const updatedOptions = featureOptions[category].filter(option => option !== processedValue);
-    const updatedBanList = [...banList[category], processedValue];
+    const updatedOptions = featureOptions[category].filter(option => option !== value);
+    const updatedBanList = [...banList[category], value];
 
     setFeatureOptions({
       ...featureOptions,
@@ -188,34 +211,19 @@ function App() {
     });
   };
 
-  const processValue = (category, value) => {
-    // Categories that use string values as-is
-    const stringCategories = ["cycle", "watering", "sunlight"];
-
-    if (stringCategories.includes(category)) {
-      return value;
-    }
-
-    // For edible and indoor categories, convert Yes/No to 1/0
-    return value === "Yes" ? "1" : "0";
-  };
-
   const unBanItem = () => {
     const category = event.target.dataset.category;
     const value = event.target.dataset.value;
 
-    // Convert display value to API value
-    const processedValue = processValue(category, value);
-
     // Check if already banned to prevent duplicates
-    if (featureOptions[category].includes(processedValue)) {
+    if (featureOptions[category].includes(value)) {
       alert(`"${value}" is already allowed!`);
       return;
     }
 
     // Remove from available options and add to ban list
-    const updatedOptions = [...featureOptions[category], processedValue];
-    const updatedBanList = banList[category].filter(option => option !== processedValue);
+    const updatedOptions = [...featureOptions[category], value];
+    const updatedBanList = banList[category].filter(option => option !== value);
 
     setFeatureOptions({
       ...featureOptions,
@@ -228,11 +236,23 @@ function App() {
     });
   }
 
+  const unProcessValue = (category, value) => {
+    const stringCategories = ["edible", "indoor", "cycle", "watering"]
+    if (stringCategories.includes(category)) {
+      return value
+    }
+
+    if (category === "sunlight") {
+      return value.split("_").join(" ");
+    }
+
+  }
+
   return (
     <div className="my-app">
       <SeenList seenList={seenList}/>
-      <Display features={features} findPlant={submitForm} banItem={banItem} banList={banList}/>
-      <BanList banList={banList} unBanItem={unBanItem} featureOptions={featureOptions}/>
+      <Display features={features} findPlant={submitForm} banItem={banItem} banList={banList} unProcessValue={unProcessValue}/>
+      <BanList banList={banList} unBanItem={unBanItem} featureOptions={featureOptions} unProcessValue={unProcessValue}/>
     </div>
   )
 }

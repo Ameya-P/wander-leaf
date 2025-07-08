@@ -1,9 +1,9 @@
 import React from 'react'
 
-const BanList = ({banList, unBanItem, featureOptions}) => {
+const BanList = ({banList, unBanItem, featureOptions, unProcessValue}) => {
   return (
     <div className="ban-list">
-      <h2>Ban List</h2>
+      <h2 className="title">Ban List</h2>
       {banList &&
           Object.entries(banList)
             .flatMap(([category, value], index) => {
@@ -26,7 +26,7 @@ const BanList = ({banList, unBanItem, featureOptions}) => {
                   data-value={item}
                   onClick={unBanItem}
                 >
-                  {category}: {item}
+                  {category}: {unProcessValue(category, item)}
                 </button>
               ));
             })
